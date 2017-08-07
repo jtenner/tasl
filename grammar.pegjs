@@ -97,9 +97,10 @@ ExpressionStatement = expressions:ExpressionList _ Terminator? {
 
 _ = [\t\r\n ]*
 __ = [\t\r\n ]+
-E0 =  left:Identifier _ operator:"=" _ right:E0 _ {
+AssignmentExpression = E0
+E0 =  left:MemberExpression _ operator:"=" _ right:E0 _ {
   return {
-    alias: "undefined",
+    alias: "AssignmentExpression",
     nodeType: "E",
     type: "E0",
     evaluate,
@@ -226,23 +227,23 @@ E7 =  left:E8 _ operator:"**" _ right:E7 _ {
   };
 } / E8
 
-True = E8
-E8 =  value:"true" _ {
+Not = E8
+E8 =  operator:"!" _ expression:E8 _ {
   return {
-    alias: "True",
+    alias: "Not",
     nodeType: "E",
     type: "E8",
     evaluate,
-    props: { value },
+    props: { operator, expression },
     text: text(),
     location: location()
   };
 } / E9
 
-False = E9
-E9 =  value:"false" _ {
+True = E9
+E9 =  value:"true" _ {
   return {
-    alias: "False",
+    alias: "True",
     nodeType: "E",
     type: "E9",
     evaluate,
@@ -252,18 +253,31 @@ E9 =  value:"false" _ {
   };
 } / E10
 
-Grouping = E10
-E10 =  open:"(" _ expressions:ExpressionList _ close:")" _ {
+False = E10
+E10 =  value:"false" _ {
+  return {
+    alias: "False",
+    nodeType: "E",
+    type: "E10",
+    evaluate,
+    props: { value },
+    text: text(),
+    location: location()
+  };
+} / E11
+
+Grouping = E11
+E11 =  open:"(" _ expressions:ExpressionList _ close:")" _ {
   return {
     alias: "Grouping",
     nodeType: "E",
-    type: "E10",
+    type: "E11",
     evaluate,
     props: { open, expressions, close },
     text: text(),
     location: location()
   };
-} / E11
+} / E12
 
 L0 = ArrayItem
 ArrayItemList = first:L0 last:(_ ","  _ L0)* _ "," ? {
@@ -322,18 +336,18 @@ C5 =  expression:Expression _ {
   };
 } 
 
-ArrayExpression = E11
-E11 =  openBrace:"[" _ expressionList:ArrayItemList _ closeBrace:"]" _ {
+ArrayExpression = E12
+E12 =  openBrace:"[" _ expressionList:ArrayItemList _ closeBrace:"]" _ {
   return {
     alias: "ArrayExpression",
     nodeType: "E",
-    type: "E11",
+    type: "E12",
     evaluate,
     props: { openBrace, expressionList, closeBrace },
     text: text(),
     location: location()
   };
-} / E12
+} / E13
 
 L1 = ObjectExpressionItem
 ObjectExpressionItemList = first:L1 last:(_ ","  _ L1)* _ "," ? {
@@ -379,31 +393,31 @@ C8 =  key:Identifier _ seperator:":" _ expression:Expression _ {
   };
 } 
 
-ObjectExpression = E12
-E12 =  openBrace:"{" _ expressionList:ObjectExpressionItemList _ closeBrace:"}" _ {
+ObjectExpression = E13
+E13 =  openBrace:"{" _ expressionList:ObjectExpressionItemList _ closeBrace:"}" _ {
   return {
     alias: "ObjectExpression",
     nodeType: "E",
-    type: "E12",
+    type: "E13",
     evaluate,
     props: { openBrace, expressionList, closeBrace },
     text: text(),
     location: location()
   };
-} / E13
+} / E14
 
-MemberExpression = E13
-E13 =  root:Identifier _ path:( path_:MemberExpressionPathItemList)? _ {
+MemberExpression = E14
+E14 =  root:Identifier _ path:( path_:MemberExpressionPathItemList)? _ {
   return {
     alias: "MemberExpression",
     nodeType: "E",
-    type: "E13",
+    type: "E14",
     evaluate,
     props: { root, path },
     text: text(),
     location: location()
   };
-} / E14
+} / E15
 
 L2 = MemberExpressionPathItem
 MemberExpressionPathItemList = first:L2 last:( _ L2)*  {
@@ -449,9 +463,48 @@ C11 =  openBracket:"[" _ expressions:ExpressionList _ closeBracket:"]" _ {
   };
 } 
 
+IfStatement = S0
+S0 =  ifKeyword:"if" _ open:"(" _ conditional:Expression _ close:")" _ block:( block0:Statement /  block1:IfCodeBlock) _ elseBlock:( elseBlock_:ElseIfBlock)? _ {
+  return {
+    alias: "IfStatement",
+    nodeType: "S",
+    type: "S0",
+    evaluate,
+    props: { ifKeyword, open, conditional, close, block, elseBlock },
+    text: text(),
+    location: location()
+  };
+} / S1
 
-E14 = ExpressionExit
-S0 = StatementExit
+IfCodeBlock = C12
+C12 =  open:"{" _ statements:StatementList _ close:"}" _ {
+  return {
+    alias: "IfCodeBlock",
+    nodeType: "C",
+    type: "C12",
+    evaluate,
+    props: { open, statements, close },
+    text: text(),
+    location: location()
+  };
+} 
 
-Keyword = ("true" / "false") 
+ElseIfBlock = C13
+C13 =  elseKeyword:"else" _ block:( block0:IfStatement /  block1:IfCodeBlock) _ {
+  return {
+    alias: "ElseIfBlock",
+    nodeType: "C",
+    type: "C13",
+    evaluate,
+    props: { elseKeyword, block },
+    text: text(),
+    location: location()
+  };
+} 
+
+
+E15 = ExpressionExit
+S1 = StatementExit
+
+Keyword = ("true" / "false" / "if" / "else") 
 Terminator = ";"

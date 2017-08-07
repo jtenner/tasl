@@ -7,7 +7,7 @@
 		exports["plg"] = factory(require("pegjs"), (function webpackLoadOptionalExternalModule() { try { return require("fs"); } catch(e) {} }()));
 	else
 		root["plg"] = factory(root["pegjs"], root["fs"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_23__, __WEBPACK_EXTERNAL_MODULE_24__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_27__, __WEBPACK_EXTERNAL_MODULE_28__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -138,7 +138,19 @@ module.exports = __webpack_require__(0)('Expression');
 "use strict";
 
 
-module.exports = __webpack_require__(0)('Identifier');
+module.exports = function (Rule) {
+  return {
+    Type: 'Optional',
+    generate: function generate(Key, NextRule, CurrentRule) {
+      return {
+        value: " " + Key + ":(" + Rule.generate(Key + "_", NextRule, CurrentRule).value + ")?",
+        toString: function toString() {
+          return this.value + " _";
+        }
+      };
+    }
+  };
+};
 
 /***/ }),
 /* 4 */
@@ -156,19 +168,7 @@ module.exports = __webpack_require__(0)('ExpressionList');
 "use strict";
 
 
-module.exports = function (Rule) {
-  return {
-    Type: 'Optional',
-    generate: function generate(Key, NextRule, CurrentRule) {
-      return {
-        value: " " + Key + ":(" + Rule.generate(Key + "_", NextRule, CurrentRule).value + ")?",
-        toString: function toString() {
-          return this.value + " _";
-        }
-      };
-    }
-  };
-};
+module.exports = __webpack_require__(0)('Identifier');
 
 /***/ }),
 /* 6 */
@@ -177,44 +177,10 @@ module.exports = function (Rule) {
 "use strict";
 
 
-module.exports = function (Value) {
-  var Insensitive = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-  return {
-    Type: 'Literal',
-    Value: Value,
-    Insensitive: Insensitive,
-    generate: function generate(Key, NextRule, CurrentRule) {
-      return {
-        value: ' ' + Key + ':"' + this.Value.replace(/"/g, '\\"') + '"' + (this.Insensitive ? "i" : ""),
-        toString: function toString() {
-          return this.value + " _";
-        }
-      };
-    }
-  };
-};
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Rule = __webpack_require__(0);
-module.exports = Rule('IdentifierList');
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 module.exports = __webpack_require__(0)('StatementList');
 
 /***/ }),
-/* 9 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -263,7 +229,69 @@ module.exports = function (statements, context) {
 };
 
 /***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function (Value) {
+  var Insensitive = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  return {
+    Type: 'Literal',
+    Value: Value,
+    Insensitive: Insensitive,
+    generate: function generate(Key, NextRule, CurrentRule) {
+      return {
+        value: ' ' + Key + ':"' + this.Value.replace(/"/g, '\\"') + '"' + (this.Insensitive ? "i" : ""),
+        toString: function toString() {
+          return this.value + " _";
+        }
+      };
+    }
+  };
+};
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = {
+  Type: 'Next',
+  generate: function generate(Key, NextRule, CurrentRule) {
+    return {
+      value: " " + Key + ":" + NextRule,
+      toString: function toString() {
+        return this.value + " _";
+      }
+    };
+  }
+};
+
+/***/ }),
 /* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Rule = __webpack_require__(0);
+module.exports = Rule('IdentifierList');
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = __webpack_require__(0)('Statement');
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -300,125 +328,7 @@ module.exports = function (expressions, context) {
 };
 
 /***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Identifier = __webpack_require__(3);
-var Optional = __webpack_require__(5);
-var Rule = __webpack_require__(0);
-var Or = __webpack_require__(1);
-var ExpressionList = __webpack_require__(4);
-module.exports = function (g) {
-  return g.addExpression({
-    Alias: 'MemberExpression',
-    Tokens: {
-      root: Identifier,
-      path: Optional(Rule('MemberExpressionPathItemList'))
-    },
-    Handler: function Handler(_ref, context) {
-      var root = _ref.root,
-          path = _ref.path;
-
-      var target = context[root.value];
-      path = path || [];
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = path[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var item = _step.value;
-
-          if (typeof target === 'undefined') {
-            throw new Error('Invalid Access at ' + JSON.stringify(item.location));
-          }
-          target = target[item.evaluate(context)];
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
-      return target;
-    }
-  }).addList({
-    Alias: 'MemberExpressionPathItemList',
-    Rule: 'MemberExpressionPathItem'
-  }).addCustom({
-    Alias: 'MemberExpressionPathItem',
-    Tokens: {
-      "pathItem": Or(Rule('IdentifierProperty'), Rule('DynamicProperty'))
-    },
-    Handler: function Handler(_ref2, context) {
-      var pathItem = _ref2.pathItem;
-      return pathItem.evaluate(context);
-    }
-  }).addCustom({
-    Alias: 'IdentifierProperty',
-    Tokens: {
-      "dot": '.',
-      "pathItem": Identifier
-    },
-    Handler: function Handler(_ref3) {
-      var pathItem = _ref3.pathItem;
-      return pathItem.value;
-    }
-  }).addCustom({
-    Alias: 'DynamicProperty',
-    Tokens: {
-      'openBracket': '[',
-      'expressions': ExpressionList,
-      'closeBracket': ']'
-    },
-    Handler: function Handler(_ref4, context) {
-      var expressions = _ref4.expressions;
-
-      var value = void 0;
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = expressions[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var expression = _step2.value;
-
-          value = expression.evaluate(context);
-        }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
-      }
-
-      return value;
-    }
-  });
-};
-
-/***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -429,25 +339,6 @@ module.exports = {
   generate: function generate(Key, NextRule, CurrentRule) {
     return {
       value: " " + Key + ":" + CurrentRule,
-      toString: function toString() {
-        return this.value + " _";
-      }
-    };
-  }
-};
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = {
-  Type: 'Next',
-  generate: function generate(Key, NextRule, CurrentRule) {
-    return {
-      value: " " + Key + ":" + NextRule,
       toString: function toString() {
         return this.value + " _";
       }
@@ -468,7 +359,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var PEG = __webpack_require__(23);
+var PEG = __webpack_require__(27);
 module.exports = function () {
   function Interpreter(grammar, handler) {
     _classCallCheck(this, Interpreter);
@@ -476,7 +367,7 @@ module.exports = function () {
     this.grammar = grammar;
     var ex = void 0;
     try {
-      __webpack_require__(24).writeFileSync('./grammar.pegjs', this.grammar, 'utf8');
+      __webpack_require__(28).writeFileSync('./grammar.pegjs', this.grammar, 'utf8');
     } catch (ex) {}
     this.parser = PEG.generate(grammar);
     this.parser.handler = handler;
@@ -586,19 +477,36 @@ module.exports = function () {
 "use strict";
 
 
-var _module$exports;
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-module.exports = (_module$exports = {
+module.exports = {
   addArrayExpressions: __webpack_require__(16),
   addArrowFunctionExpressions: __webpack_require__(17),
-  addBooleanExpressions: __webpack_require__(18),
-  addGroupingExpressions: __webpack_require__(19),
-  addMathExpressions: __webpack_require__(20),
-  addMemberExpressions: __webpack_require__(11),
-  addObjectExpressions: __webpack_require__(21)
-}, _defineProperty(_module$exports, 'addMemberExpressions', __webpack_require__(11)), _defineProperty(_module$exports, 'Current', __webpack_require__(12)), _defineProperty(_module$exports, 'evaluateExpressions', __webpack_require__(10)), _defineProperty(_module$exports, 'evaluateStatements', __webpack_require__(9)), _defineProperty(_module$exports, 'Expression', __webpack_require__(2)), _defineProperty(_module$exports, 'ExpressionList', __webpack_require__(4)), _defineProperty(_module$exports, 'Grammar', __webpack_require__(22)), _defineProperty(_module$exports, 'Identifier', __webpack_require__(3)), _defineProperty(_module$exports, 'IdentifierList', __webpack_require__(7)), _defineProperty(_module$exports, 'Integer', __webpack_require__(26)), _defineProperty(_module$exports, 'Interpreter', __webpack_require__(14)), _defineProperty(_module$exports, 'Literal', __webpack_require__(6)), _defineProperty(_module$exports, 'Next', __webpack_require__(13)), _defineProperty(_module$exports, 'Optional', __webpack_require__(5)), _defineProperty(_module$exports, 'Or', __webpack_require__(1)), _defineProperty(_module$exports, 'RequiredWhitespace', __webpack_require__(27)), _defineProperty(_module$exports, 'Rule', __webpack_require__(0)), _defineProperty(_module$exports, 'Statement', __webpack_require__(28)), _defineProperty(_module$exports, 'StatementList', __webpack_require__(8)), _module$exports);
+  addAssignmentExpression: __webpack_require__(18),
+  addBooleanExpressions: __webpack_require__(19),
+  addGroupingExpressions: __webpack_require__(20),
+  addIfStatements: __webpack_require__(21),
+  addMathExpressions: __webpack_require__(22),
+  addMemberExpressions: __webpack_require__(23),
+  addObjectExpressions: __webpack_require__(24),
+  addTransformExpressions: __webpack_require__(25),
+  Current: __webpack_require__(13),
+  evaluateExpressions: __webpack_require__(12),
+  evaluateStatements: __webpack_require__(7),
+  Expression: __webpack_require__(2),
+  ExpressionList: __webpack_require__(4),
+  Grammar: __webpack_require__(26),
+  Identifier: __webpack_require__(5),
+  IdentifierList: __webpack_require__(10),
+  Integer: __webpack_require__(30),
+  Interpreter: __webpack_require__(14),
+  Literal: __webpack_require__(8),
+  Next: __webpack_require__(9),
+  Optional: __webpack_require__(3),
+  Or: __webpack_require__(1),
+  RequiredWhitespace: __webpack_require__(31),
+  Rule: __webpack_require__(0),
+  Statement: __webpack_require__(11),
+  StatementList: __webpack_require__(6)
+};
 
 /***/ }),
 /* 16 */
@@ -730,12 +638,12 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 var Rule = __webpack_require__(0);
 var Or = __webpack_require__(1);
-var Identifier = __webpack_require__(3);
-var IdentifierList = __webpack_require__(7);
-var Optional = __webpack_require__(5);
-var StatementList = __webpack_require__(8);
+var Identifier = __webpack_require__(5);
+var IdentifierList = __webpack_require__(10);
+var Optional = __webpack_require__(3);
+var StatementList = __webpack_require__(6);
 var Expression = __webpack_require__(2);
-var evaluateStatements = __webpack_require__(9);
+var evaluateStatements = __webpack_require__(7);
 module.exports = function (g) {
   return g.addCustom({
     Alias: 'ArrowFunctionCodeBlock',
@@ -809,8 +717,61 @@ module.exports = function (g) {
 "use strict";
 
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var Rule = __webpack_require__(0);
 module.exports = function (g) {
-  return g.addExpression({
+  return g.addBinaryExpression({
+    Alias: 'AssignmentExpression',
+    Left: Rule('MemberExpression'),
+    Operator: '=',
+    Handler: function Handler(_ref, context) {
+      var left = _ref.left,
+          right = _ref.right;
+
+      var target = context,
+          key = void 0;
+      var _left$props = left.props,
+          root = _left$props.root,
+          path = _left$props.path;
+
+      var targetPath = [root].concat(_toConsumableArray(path || []));
+      var InvalidMemberPathError = new Error('Invalid member path: ' + left.text + ' at ' + JSON.stringify(left.location));
+
+      for (var i = 0; i < targetPath.length - 2; i++) {
+        key = targetPath[i].type === 'Identifier' ? targetPath[i].value : targetPath[i].evaluate(context);
+        if (target.hasOwnProperty(key)) {
+          target = target[key];
+        } else {
+          throw InvalidMemberPathError;
+        }
+      }
+      var lastPath = targetPath[targetPath.length - 1];
+      key = lastPath.type === 'Identifier' ? lastPath.value : lastPath.evaluate(context);
+      if (target.hasOwnProperty(key)) {
+        return target[key] = right.evaluate(context);
+      }
+      throw InvalidMemberPathError;
+    }
+  });
+};
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function (g) {
+  return g.addUnaryExpression({
+    Alias: 'Not',
+    Operator: '!',
+    Handler: function Handler(_ref, context) {
+      var expression = _ref.expression;
+      return !expression.evaluate(context);
+    }
+  }).addExpression({
     Alias: 'True',
     Tokens: {
       'value': 'true'
@@ -830,7 +791,7 @@ module.exports = function (g) {
 };
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -853,14 +814,74 @@ module.exports = function (g) {
 };
 
 /***/ }),
-/* 20 */
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Rule = __webpack_require__(0);
+var Expression = __webpack_require__(2);
+var StatementList = __webpack_require__(6);
+var Or = __webpack_require__(1);
+var evaluateStatements = __webpack_require__(7);
+var Optional = __webpack_require__(3);
+var Statement = __webpack_require__(11);
+module.exports = function (g) {
+  return g.addStatement({
+    Alias: 'IfStatement',
+    Tokens: {
+      "ifKeyword": 'if',
+      "open": "(",
+      "conditional": Expression,
+      "close": ")",
+      "block": Or(Statement, Rule('IfCodeBlock')),
+      "elseBlock": Optional(Rule('ElseIfBlock'))
+    },
+    Handler: function Handler(_ref, context) {
+      var conditional = _ref.conditional,
+          block = _ref.block,
+          elseBlock = _ref.elseBlock;
+
+      if (conditional.evaluate(context)) {
+        return block.evaluate(context);
+      } else {
+        return elseBlock.evaluate(context);
+      }
+    }
+  }).addCustom({
+    Alias: 'IfCodeBlock',
+    Tokens: {
+      'open': '{',
+      'statements': StatementList,
+      'close': '}'
+    },
+    Handler: function Handler(_ref2, context) {
+      var statements = _ref2.statements;
+      return evaluateStatements(statements, context);
+    }
+  }).addCustom({
+    Alias: 'ElseIfBlock',
+    Tokens: {
+      'elseKeyword': 'else',
+      'block': Or(Rule('IfStatement'), Rule('IfCodeBlock'))
+    },
+    Handler: function Handler(_ref3, context) {
+      var block = _ref3.block;
+      return block.evaluate(context);
+    }
+  }).reserve('if', 'else');
+};
+
+/***/ }),
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var ExpressionList = __webpack_require__(4);
-var evaluateExpressions = __webpack_require__(10);
+var evaluateExpressions = __webpack_require__(12);
 module.exports = function (g) {
   return g.addBinaryExpression({
     Alias: 'Addition',
@@ -913,7 +934,125 @@ module.exports = function (g) {
 };
 
 /***/ }),
-/* 21 */
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Identifier = __webpack_require__(5);
+var Optional = __webpack_require__(3);
+var Rule = __webpack_require__(0);
+var Or = __webpack_require__(1);
+var ExpressionList = __webpack_require__(4);
+module.exports = function (g) {
+  return g.addExpression({
+    Alias: 'MemberExpression',
+    Tokens: {
+      root: Identifier,
+      path: Optional(Rule('MemberExpressionPathItemList'))
+    },
+    Handler: function Handler(_ref, context) {
+      var root = _ref.root,
+          path = _ref.path;
+
+      var target = context[root.value];
+      path = path || [];
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = path[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var item = _step.value;
+
+          if (typeof target === 'undefined') {
+            throw new Error('Invalid Access at ' + JSON.stringify(item.location));
+          }
+          target = target[item.evaluate(context)];
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      return target;
+    }
+  }).addList({
+    Alias: 'MemberExpressionPathItemList',
+    Rule: 'MemberExpressionPathItem'
+  }).addCustom({
+    Alias: 'MemberExpressionPathItem',
+    Tokens: {
+      "pathItem": Or(Rule('IdentifierProperty'), Rule('DynamicProperty'))
+    },
+    Handler: function Handler(_ref2, context) {
+      var pathItem = _ref2.pathItem;
+      return pathItem.evaluate(context);
+    }
+  }).addCustom({
+    Alias: 'IdentifierProperty',
+    Tokens: {
+      "dot": '.',
+      "pathItem": Identifier
+    },
+    Handler: function Handler(_ref3) {
+      var pathItem = _ref3.pathItem;
+      return pathItem.value;
+    }
+  }).addCustom({
+    Alias: 'DynamicProperty',
+    Tokens: {
+      'openBracket': '[',
+      'expressions': ExpressionList,
+      'closeBracket': ']'
+    },
+    Handler: function Handler(_ref4, context) {
+      var expressions = _ref4.expressions;
+
+      var value = void 0;
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = expressions[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var expression = _step2.value;
+
+          value = expression.evaluate(context);
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+
+      return value;
+    }
+  });
+};
+
+/***/ }),
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -923,9 +1062,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var Rule = __webpack_require__(0);
 var Or = __webpack_require__(1);
-var Literal = __webpack_require__(6);
+var Literal = __webpack_require__(8);
 var Expression = __webpack_require__(2);
-var Identifier = __webpack_require__(3);
+var Identifier = __webpack_require__(5);
 
 module.exports = function (grammar) {
   return grammar.addList({
@@ -1014,7 +1153,77 @@ module.exports = function (grammar) {
 };
 
 /***/ }),
-/* 22 */
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var Rule = __webpack_require__(0);
+var Next = __webpack_require__(9);
+var Optional = __webpack_require__(3);
+var ExpressionList = __webpack_require__(4);
+
+module.exports = function (g) {
+  return g.addExpression({
+    Alias: 'Transform',
+    Tokens: {
+      left: Next,
+      operator: '|',
+      right: Rule('MemberExpression'),
+      parameters: Optional(Rule('TransformParameters'))
+    },
+    Handler: function Handler(_ref, context) {
+      var left = _ref.left,
+          right = _ref.right,
+          parameters = _ref.parameters;
+      return right.evaluate(context).apply(undefined, [left.evaluate(context)].concat(_toConsumableArray(parameters ? parameters.evaluate(context) : [])));
+    }
+  }).addCustom({
+    Alias: 'TransformParameters',
+    Tokens: {
+      "open": "(",
+      "expressions": Optional(ExpressionList),
+      "close": ")"
+    },
+    Handler: function Handler(_ref2, context) {
+      var expressions = _ref2.expressions;
+
+      var result = [];
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = expressions[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var expression = _step.value;
+
+          result.push(expression.evaluate(context));
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      return result;
+    }
+  });
+};
+
+/***/ }),
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1027,9 +1236,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Rule = __webpack_require__(0);
-var Next = __webpack_require__(13);
-var Current = __webpack_require__(12);
-var Literal = __webpack_require__(6);
+var Next = __webpack_require__(9);
+var Current = __webpack_require__(13);
+var Literal = __webpack_require__(8);
 var Interpreter = __webpack_require__(14);
 var range = function range(fr, to) {
   var result = [];
@@ -1055,7 +1264,7 @@ module.exports = function () {
     };
     this.keywords = [];
     this.terminator = ";";
-    this.grammar = __webpack_require__(25);
+    this.grammar = __webpack_require__(29);
   }
 
   _createClass(Grammar, [{
@@ -1192,26 +1401,26 @@ module.exports = function () {
 }();
 
 /***/ }),
-/* 23 */
+/* 27 */
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_23__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_27__;
 
 /***/ }),
-/* 24 */
+/* 28 */
 /***/ (function(module, exports) {
 
-if(typeof __WEBPACK_EXTERNAL_MODULE_24__ === 'undefined') {var e = new Error("Cannot find module \"fs\""); e.code = 'MODULE_NOT_FOUND'; throw e;}
-module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
+if(typeof __WEBPACK_EXTERNAL_MODULE_28__ === 'undefined') {var e = new Error("Cannot find module \"fs\""); e.code = 'MODULE_NOT_FOUND'; throw e;}
+module.exports = __WEBPACK_EXTERNAL_MODULE_28__;
 
 /***/ }),
-/* 25 */
+/* 29 */
 /***/ (function(module, exports) {
 
 module.exports = "{\r\n  const { handler } = this;\r\n\r\n  function evaluate(context) {\r\n    return handler[this.nodeType][this.type](this.props, context);\r\n  }\r\n  handler.S.SExpressionStatement = function SExpressionStatement({ expressions }, context) {\r\n    let value;\r\n    for(const expression of expressions) {\r\n      value = expression.evaluate(context);\r\n    }\r\n    return [null, value];\r\n  };\r\n  handler.E.EReturnValue = function EReturnValue({ value }) { return value; }\r\n}\r\n\r\nProgram = _ statements:StatementList _ {\r\n  return statements;\r\n}\r\n\r\nStatementList = first:Statement last:(_ Statement)* {\r\n  return [first, ...last.map(x => x[1])];\r\n}\r\nExpressionList = first:Expression last:(_ ',' _ Expression)* {\r\n  return [first, ...last.map(x => x[3])];\r\n}\r\nIdentifier = !Keyword [a-zA-Z$_][a-zA-Z$_0-9]* {\r\n  return {\r\n    nodeType: 'I',\r\n    type: 'Identifier',\r\n    value: text(),\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\nIdentifierList = first:Identifier last:(_ \",\" _ Identifier) {\r\n  return [first, ...last.map(x => x[3])];\r\n}\r\n\r\nStatement = S0\r\nExpression = E0\r\n\r\nExpressionExit = Float\r\n\r\nFloat = [0-9]+ \".\" [0-9]+ {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: parseFloat(text()),\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n} / Integer\r\n\r\nInteger = [0-9]+ {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: parseInt(text(), 10),\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n} / Null\r\n\r\nNull = \"null\" {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: null,\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\n\r\nStatementExit = ExpressionStatement\r\n\r\nExpressionStatement = expressions:ExpressionList _ Terminator? {\r\n  return {\r\n    alias: 'ExpressionStatement',\r\n    nodeType: \"S\",\r\n    type: 'SExpressionStatement',\r\n    evaluate,\r\n    props: { expressions },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\n\r\n_ = [\\t\\r\\n ]*\r\n__ = [\\t\\r\\n ]+"
 
 /***/ }),
-/* 26 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1230,7 +1439,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 27 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1246,15 +1455,6 @@ module.exports = {
     };
   }
 };
-
-/***/ }),
-/* 28 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = __webpack_require__(0)('Statement');
 
 /***/ })
 /******/ ]);

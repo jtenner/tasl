@@ -7,7 +7,7 @@
 		exports["plg"] = factory(require("pegjs"), (function webpackLoadOptionalExternalModule() { try { return require("fs"); } catch(e) {} }()));
 	else
 		root["plg"] = factory(root["pegjs"], root["fs"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_23__, __WEBPACK_EXTERNAL_MODULE_24__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_27__, __WEBPACK_EXTERNAL_MODULE_28__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -114,18 +114,6 @@ module.exports = __webpack_require__(0)('Expression');
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(0)('Identifier');
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(0)('ExpressionList');
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports) {
 
 module.exports = (Rule) => ({
@@ -139,7 +127,40 @@ module.exports = (Rule) => ({
 });
 
 /***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(0)('ExpressionList');
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(0)('Identifier');
+
+/***/ }),
 /* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(0)('StatementList');
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+module.exports = (statements, context) => {
+  let result, value;
+  for(const statement of statements) {
+    [result, value] = statement.evaluate(context);
+    if (result === 'return') {
+      return [result, value];
+    }
+  }
+  return [null, value];
+};
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = (Value, Insensitive = false) => ({
@@ -157,128 +178,7 @@ module.exports = (Value, Insensitive = false) => ({
 });
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Rule = __webpack_require__(0);
-module.exports = Rule('IdentifierList');
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(0)('StatementList');
-
-/***/ }),
 /* 9 */
-/***/ (function(module, exports) {
-
-module.exports = (statements, context) => {
-  let result, value;
-  for(const statement of statements) {
-    [result, value] = statement.evaluate(context);
-    if (result === 'return') {
-      return [result, value];
-    }
-  }
-  return [null, value];
-};
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports) {
-
-module.exports = (expressions, context) => {
-  let value;
-  for(const expression of expressions) {
-    value = expression.evaluate(context);
-  }
-  return value;
-}
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Identifier = __webpack_require__(3);
-const Optional = __webpack_require__(5);
-const Rule = __webpack_require__(0);
-const Or = __webpack_require__(1);
-const ExpressionList = __webpack_require__(4);
-module.exports = (g) => g
-  .addExpression({
-    Alias: 'MemberExpression',
-    Tokens: {
-      root: Identifier,
-      path: Optional(Rule('MemberExpressionPathItemList'))
-    },
-    Handler: ({ root, path }, context) => {
-      let target = context[root.value];
-      path = path || [];
-      for (const item of path) {
-        if (typeof target === 'undefined') {
-          throw new Error('Invalid Access at ' + JSON.stringify(item.location));
-        }
-        target = target[item.evaluate(context)];
-      }
-      return target;
-    },
-  })
-  .addList({
-    Alias: 'MemberExpressionPathItemList',
-    Rule: 'MemberExpressionPathItem',
-  })
-  .addCustom({
-    Alias: 'MemberExpressionPathItem',
-    Tokens: {
-      "pathItem": Or(Rule('IdentifierProperty'), Rule('DynamicProperty'))
-    },
-    Handler: ({ pathItem }, context) => pathItem.evaluate(context)
-  })
-  .addCustom({
-    Alias: 'IdentifierProperty',
-    Tokens: {
-      "dot": '.',
-      "pathItem": Identifier
-    },
-    Handler: ({ pathItem }) => pathItem.value
-  })
-  .addCustom({
-    Alias: 'DynamicProperty',
-    Tokens: {
-      'openBracket': '[',
-      'expressions': ExpressionList,
-      'closeBracket': ']'
-    },
-    Handler: ({ expressions }, context) => {
-      let value;
-      for(const expression of expressions) {
-        value = expression.evaluate(context);
-      }
-      return value;
-    }
-  })
-
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports) {
-
-module.exports = {
-  type: 'Current',
-  generate(Key, NextRule, CurrentRule) {
-    return {
-      value: ` ${Key}:${CurrentRule}`,
-      toString() {
-        return this.value + " _";
-      }
-    };
-  }
-}
-
-/***/ }),
-/* 13 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -294,16 +194,57 @@ module.exports = {
 };
 
 /***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Rule = __webpack_require__(0);
+module.exports = Rule('IdentifierList');
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(0)('Statement');
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports) {
+
+module.exports = (expressions, context) => {
+  let value;
+  for(const expression of expressions) {
+    value = expression.evaluate(context);
+  }
+  return value;
+}
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports) {
+
+module.exports = {
+  type: 'Current',
+  generate(Key, NextRule, CurrentRule) {
+    return {
+      value: ` ${Key}:${CurrentRule}`,
+      toString() {
+        return this.value + " _";
+      }
+    };
+  }
+}
+
+/***/ }),
 /* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const PEG = __webpack_require__(23);
+const PEG = __webpack_require__(27);
 module.exports = class Interpreter {
   constructor(grammar, handler) {
     this.grammar = grammar;
     let ex;
     try {
-      __webpack_require__(24).writeFileSync('./grammar.pegjs', this.grammar, 'utf8');
+      __webpack_require__(28).writeFileSync('./grammar.pegjs', this.grammar, 'utf8');
     } catch (ex) {
 
     }
@@ -345,30 +286,32 @@ module.exports = class Interpreter {
 module.exports = {
   addArrayExpressions: __webpack_require__(16),
   addArrowFunctionExpressions: __webpack_require__(17),
-  addBooleanExpressions: __webpack_require__(18),
-  addGroupingExpressions: __webpack_require__(19),
-  addMathExpressions: __webpack_require__(20),
-  addMemberExpressions: __webpack_require__(11),
-  addObjectExpressions: __webpack_require__(21),
-  addMemberExpressions: __webpack_require__(11),
-  Current: __webpack_require__(12),
-  evaluateExpressions: __webpack_require__(10),
-  evaluateStatements: __webpack_require__(9),
+  addAssignmentExpression: __webpack_require__(18),
+  addBooleanExpressions: __webpack_require__(19),
+  addGroupingExpressions: __webpack_require__(20),
+  addIfStatements: __webpack_require__(21),
+  addMathExpressions: __webpack_require__(22),
+  addMemberExpressions: __webpack_require__(23),
+  addObjectExpressions: __webpack_require__(24),
+  addTransformExpressions: __webpack_require__(25),
+  Current: __webpack_require__(13),
+  evaluateExpressions: __webpack_require__(12),
+  evaluateStatements: __webpack_require__(7),
   Expression: __webpack_require__(2),
   ExpressionList: __webpack_require__(4),
-  Grammar: __webpack_require__(22),
-  Identifier: __webpack_require__(3),
-  IdentifierList: __webpack_require__(7),
-  Integer: __webpack_require__(26),
+  Grammar: __webpack_require__(26),
+  Identifier: __webpack_require__(5),
+  IdentifierList: __webpack_require__(10),
+  Integer: __webpack_require__(30),
   Interpreter: __webpack_require__(14),
-  Literal: __webpack_require__(6),
-  Next: __webpack_require__(13),
-  Optional: __webpack_require__(5),
+  Literal: __webpack_require__(8),
+  Next: __webpack_require__(9),
+  Optional: __webpack_require__(3),
   Or: __webpack_require__(1),
-  RequiredWhitespace: __webpack_require__(27),
+  RequiredWhitespace: __webpack_require__(31),
   Rule: __webpack_require__(0),
-  Statement: __webpack_require__(28),
-  StatementList: __webpack_require__(8)
+  Statement: __webpack_require__(11),
+  StatementList: __webpack_require__(6)
 };
 
 /***/ }),
@@ -450,12 +393,12 @@ module.exports = (grammar) => grammar.addList({
 
 const Rule = __webpack_require__(0);
 const Or = __webpack_require__(1);
-const Identifier = __webpack_require__(3);
-const IdentifierList = __webpack_require__(7);
-const Optional = __webpack_require__(5);
-const StatementList = __webpack_require__(8);
+const Identifier = __webpack_require__(5);
+const IdentifierList = __webpack_require__(10);
+const Optional = __webpack_require__(3);
+const StatementList = __webpack_require__(6);
 const Expression = __webpack_require__(2);
-const evaluateStatements = __webpack_require__(9);
+const evaluateStatements = __webpack_require__(7);
 module.exports = (g) => g
 .addCustom({
   Alias: 'ArrowFunctionCodeBlock',
@@ -507,10 +450,52 @@ module.exports = (g) => g
 
 /***/ }),
 /* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Rule = __webpack_require__(0);
+module.exports = (g) => g.addBinaryExpression({
+  Alias: 'AssignmentExpression',
+  Left: Rule('MemberExpression'),
+  Operator: '=',
+  Handler: ({ left, right }, context) => {
+    let target = context, key;
+    const { root, path } = left.props;
+    const targetPath = [root, ...(path || [])];
+    const InvalidMemberPathError = new Error(`Invalid member path: ${left.text} at ${JSON.stringify(left.location)}`);
+
+
+    for (let i = 0; i < targetPath.length - 2; i++) {
+      key = targetPath[i].type === 'Identifier'
+        ? targetPath[i].value
+        : targetPath[i].evaluate(context);
+      if (target.hasOwnProperty(key)) {
+        target = target[key];
+      } else {
+        throw InvalidMemberPathError;
+      }
+    }
+    const lastPath = targetPath[targetPath.length - 1];
+    key = lastPath.type === 'Identifier'
+      ? lastPath.value
+      : lastPath.evaluate(context);
+    if (target.hasOwnProperty(key)) {
+      return target[key] = right.evaluate(context);
+    }
+    throw InvalidMemberPathError;
+  }
+});
+
+/***/ }),
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = g => g
- .addExpression({
+  .addUnaryExpression({
+    Alias: 'Not',
+    Operator: '!',
+    Handler: ({ expression }, context) => !expression.evaluate(context)
+  })
+  .addExpression({
     Alias: 'True',
     Tokens: {
      'value': 'true',
@@ -527,7 +512,7 @@ module.exports = g => g
   .reserve("true", "false")
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const ExpressionList = __webpack_require__(4);
@@ -543,11 +528,61 @@ module.exports = g => g
   })
 
 /***/ }),
-/* 20 */
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Rule = __webpack_require__(0);
+const Expression = __webpack_require__(2);
+const StatementList = __webpack_require__(6);
+const Or = __webpack_require__(1);
+const evaluateStatements = __webpack_require__(7);
+const Optional = __webpack_require__(3);
+const Statement = __webpack_require__(11);
+module.exports = (g) =>
+  g.addStatement({
+    Alias: 'IfStatement',
+    Tokens: {
+      "ifKeyword": 'if',
+      "open": "(",
+      "conditional": Expression,
+      "close": ")",
+      "block": Or(Statement, Rule('IfCodeBlock')),
+      "elseBlock": Optional(Rule('ElseIfBlock'))
+    },
+    Handler: ({ conditional, block, elseBlock }, context) => {
+      if (conditional.evaluate(context)) {
+        return block.evaluate(context);
+      } else {
+        return elseBlock.evaluate(context);
+      }
+    }
+  })
+  .addCustom({
+    Alias: 'IfCodeBlock',
+    Tokens: {
+      'open': '{',
+      'statements': StatementList,
+      'close': '}'
+    },
+    Handler: ({ statements }, context) => evaluateStatements(statements, context)
+  })
+  .addCustom({
+    Alias: 'ElseIfBlock',
+    Tokens: {
+      'elseKeyword': 'else',
+      'block': Or(Rule('IfStatement'), Rule('IfCodeBlock'))
+    },
+    Handler: ({ block }, context) => block.evaluate(context)
+  })
+  .reserve('if', 'else')
+
+
+/***/ }),
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const ExpressionList = __webpack_require__(4);
-const evaluateExpressions = __webpack_require__(10);
+const evaluateExpressions = __webpack_require__(12);
 module.exports = (g) => g
   .addBinaryExpression({
     Alias: 'Addition',
@@ -581,14 +616,79 @@ module.exports = (g) => g
   })
 
 /***/ }),
-/* 21 */
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Identifier = __webpack_require__(5);
+const Optional = __webpack_require__(3);
+const Rule = __webpack_require__(0);
+const Or = __webpack_require__(1);
+const ExpressionList = __webpack_require__(4);
+module.exports = (g) => g
+  .addExpression({
+    Alias: 'MemberExpression',
+    Tokens: {
+      root: Identifier,
+      path: Optional(Rule('MemberExpressionPathItemList'))
+    },
+    Handler: ({ root, path }, context) => {
+      let target = context[root.value];
+      path = path || [];
+      for (const item of path) {
+        if (typeof target === 'undefined') {
+          throw new Error('Invalid Access at ' + JSON.stringify(item.location));
+        }
+        target = target[item.evaluate(context)];
+      }
+      return target;
+    },
+  })
+  .addList({
+    Alias: 'MemberExpressionPathItemList',
+    Rule: 'MemberExpressionPathItem',
+  })
+  .addCustom({
+    Alias: 'MemberExpressionPathItem',
+    Tokens: {
+      "pathItem": Or(Rule('IdentifierProperty'), Rule('DynamicProperty'))
+    },
+    Handler: ({ pathItem }, context) => pathItem.evaluate(context)
+  })
+  .addCustom({
+    Alias: 'IdentifierProperty',
+    Tokens: {
+      "dot": '.',
+      "pathItem": Identifier
+    },
+    Handler: ({ pathItem }) => pathItem.value
+  })
+  .addCustom({
+    Alias: 'DynamicProperty',
+    Tokens: {
+      'openBracket': '[',
+      'expressions': ExpressionList,
+      'closeBracket': ']'
+    },
+    Handler: ({ expressions }, context) => {
+      let value;
+      for(const expression of expressions) {
+        value = expression.evaluate(context);
+      }
+      return value;
+    }
+  })
+
+
+
+/***/ }),
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const Rule = __webpack_require__(0);
 const Or = __webpack_require__(1);
-const Literal = __webpack_require__(6);
+const Literal = __webpack_require__(8);
 const Expression = __webpack_require__(2);
-const Identifier = __webpack_require__(3);
+const Identifier = __webpack_require__(5);
 
 module.exports = (grammar) => grammar.addList({
   Alias: 'ObjectExpressionItemList',
@@ -641,13 +741,50 @@ module.exports = (grammar) => grammar.addList({
 });
 
 /***/ }),
-/* 22 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const Rule = __webpack_require__(0);
-const Next = __webpack_require__(13);
-const Current = __webpack_require__(12);
-const Literal = __webpack_require__(6);
+const Next = __webpack_require__(9);
+const Optional = __webpack_require__(3);
+const ExpressionList = __webpack_require__(4);
+
+module.exports = (g) => g.addExpression({
+  Alias: 'Transform',
+  Tokens: {
+    left: Next,
+    operator: '|',
+    right: Rule('MemberExpression'),
+    parameters: Optional(Rule('TransformParameters'))
+  },
+  Handler: ({ left, right, parameters }, context) => right.evaluate(context)(left.evaluate(context), ...(parameters ? parameters.evaluate(context) : []))
+})
+.addCustom({
+  Alias: 'TransformParameters',
+  Tokens: {
+    "open": "(",
+    "expressions": Optional(ExpressionList),
+    "close": ")"
+  },
+  Handler: ({ expressions, }, context) => {
+    const result = [];
+    for(const expression of expressions) {
+      result.push(
+        expression.evaluate(context)
+      );
+    }
+    return result;
+  }
+})
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Rule = __webpack_require__(0);
+const Next = __webpack_require__(9);
+const Current = __webpack_require__(13);
+const Literal = __webpack_require__(8);
 const Interpreter = __webpack_require__(14);
 const range = (fr, to) => {
   let result = [];
@@ -671,7 +808,7 @@ module.exports = class Grammar {
     };
     this.keywords = [];
     this.terminator = ";";
-    this.grammar = __webpack_require__(25);
+    this.grammar = __webpack_require__(29);
   }
   setTerminator(value) {
     this.terminator = value;
@@ -791,26 +928,26 @@ Terminator = "${this.terminator}"
 };
 
 /***/ }),
-/* 23 */
+/* 27 */
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_23__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_27__;
 
 /***/ }),
-/* 24 */
+/* 28 */
 /***/ (function(module, exports) {
 
-if(typeof __WEBPACK_EXTERNAL_MODULE_24__ === 'undefined') {var e = new Error("Cannot find module \"fs\""); e.code = 'MODULE_NOT_FOUND'; throw e;}
-module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
+if(typeof __WEBPACK_EXTERNAL_MODULE_28__ === 'undefined') {var e = new Error("Cannot find module \"fs\""); e.code = 'MODULE_NOT_FOUND'; throw e;}
+module.exports = __WEBPACK_EXTERNAL_MODULE_28__;
 
 /***/ }),
-/* 25 */
+/* 29 */
 /***/ (function(module, exports) {
 
 module.exports = "{\r\n  const { handler } = this;\r\n\r\n  function evaluate(context) {\r\n    return handler[this.nodeType][this.type](this.props, context);\r\n  }\r\n  handler.S.SExpressionStatement = function SExpressionStatement({ expressions }, context) {\r\n    let value;\r\n    for(const expression of expressions) {\r\n      value = expression.evaluate(context);\r\n    }\r\n    return [null, value];\r\n  };\r\n  handler.E.EReturnValue = function EReturnValue({ value }) { return value; }\r\n}\r\n\r\nProgram = _ statements:StatementList _ {\r\n  return statements;\r\n}\r\n\r\nStatementList = first:Statement last:(_ Statement)* {\r\n  return [first, ...last.map(x => x[1])];\r\n}\r\nExpressionList = first:Expression last:(_ ',' _ Expression)* {\r\n  return [first, ...last.map(x => x[3])];\r\n}\r\nIdentifier = !Keyword [a-zA-Z$_][a-zA-Z$_0-9]* {\r\n  return {\r\n    nodeType: 'I',\r\n    type: 'Identifier',\r\n    value: text(),\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\nIdentifierList = first:Identifier last:(_ \",\" _ Identifier) {\r\n  return [first, ...last.map(x => x[3])];\r\n}\r\n\r\nStatement = S0\r\nExpression = E0\r\n\r\nExpressionExit = Float\r\n\r\nFloat = [0-9]+ \".\" [0-9]+ {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: parseFloat(text()),\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n} / Integer\r\n\r\nInteger = [0-9]+ {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: parseInt(text(), 10),\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n} / Null\r\n\r\nNull = \"null\" {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: null,\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\n\r\nStatementExit = ExpressionStatement\r\n\r\nExpressionStatement = expressions:ExpressionList _ Terminator? {\r\n  return {\r\n    alias: 'ExpressionStatement',\r\n    nodeType: \"S\",\r\n    type: 'SExpressionStatement',\r\n    evaluate,\r\n    props: { expressions },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\n\r\n_ = [\\t\\r\\n ]*\r\n__ = [\\t\\r\\n ]+"
 
 /***/ }),
-/* 26 */
+/* 30 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -826,7 +963,7 @@ module.exports = {
 }
 
 /***/ }),
-/* 27 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -837,12 +974,6 @@ module.exports = {
     };
   }
 };
-
-/***/ }),
-/* 28 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(0)('Statement');
 
 /***/ })
 /******/ ]);

@@ -2,30 +2,34 @@ const { Grammar, Rule, Expression,
   Literal, Or, Identifier,
   addArrayExpressions, addObjectExpressions, addArrowFunctionExpressions,
   addMemberExpressions, addMathExpressions, addBooleanExpressions,
-addGroupingExpressions } = require('./dist/plg');
+addGroupingExpressions, addIfStatements, addAssignmentExpression } = require('./dist/plg');
 let g = new
  Grammar;
-g.addBinaryExpression({
-  Left: Identifier,
-  Operator: '=',
-  Handler: ({ left, right }, context) => context[left.value] = right.evaluate(context)
-});
+
+addAssignmentExpression(g);
 addArrowFunctionExpressions(g);
 addMathExpressions(g);
-
+addTransformExpressions(g);
 addBooleanExpressions(g);
-
 addGroupingExpressions(g);
 addArrayExpressions(g);
 addObjectExpressions(g);
 addMemberExpressions(g);
+addIfStatements(g);
 
 const i = g.generate();
-let context = {};
+let context = {
+  a: false,
+  c: 0
+};
 console.log(i.evaluate(`
-a = { a: 1, b: 2, c: 3 };
-b = [1...10];
-c = { ...a, d: 4, e: 5, f: 6 };
-d = [...b, 5,4,3,2,1];
+a = true;
+if (a) 
+  c = 1;
+ else if(false)
+   1;
+ else {
+  c = 2;
+}
 `, context));
 console.log(context);
