@@ -2,7 +2,7 @@
   "name": "tasl",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/plg.js",
   "scripts": {
     "test": "webpack && mocha test/**/**.js -c"
   },
