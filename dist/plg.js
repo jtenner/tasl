@@ -893,9 +893,7 @@ module.exports = class Grammar {
     });
   }
   addRule(options) {
-    
     const { Alias, Tokens, Type, Handler } = options;
-    console.log("adding", Alias);
     this.counts[Type] += 1;
     const Name = `${Type}${this.counts[Type]}`;
     this.handler[Type][Name] = Handler;

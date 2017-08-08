@@ -1435,7 +1435,6 @@ module.exports = function () {
           Type = options.Type,
           Handler = options.Handler;
 
-      console.log("adding", Alias);
       this.counts[Type] += 1;
       var Name = '' + Type + this.counts[Type];
       this.handler[Type][Name] = Handler;
