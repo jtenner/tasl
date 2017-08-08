@@ -140,27 +140,6 @@ module.exports = __webpack_require__(0)('Identifier');
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(0)('StatementList');
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports) {
-
-module.exports = (statements, context) => {
-  let result, value;
-  for(const statement of statements) {
-    [result, value] = statement.evaluate(context);
-    if (result === 'return') {
-      return [result, value];
-    }
-  }
-  return [null, value];
-};
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = (Value, Insensitive = false) => ({
@@ -176,6 +155,27 @@ module.exports = (Value, Insensitive = false) => ({
     };
   }
 });
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(0)('StatementList');
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports) {
+
+module.exports = (statements, context) => {
+  let result, value;
+  for(const statement of statements) {
+    [result, value] = statement.evaluate(context);
+    if (result === 'return') {
+      return [result, value];
+    }
+  }
+  return [null, value];
+};
 
 /***/ }),
 /* 9 */
@@ -297,7 +297,7 @@ module.exports = {
   Current: __webpack_require__(13),
   evaluateExpressions: __webpack_require__(12),
   evaluateExpressionsAsync: __webpack_require__(26),
-  evaluateStatements: __webpack_require__(7),
+  evaluateStatements: __webpack_require__(8),
   evaluateStatementsAsync: __webpack_require__(27),
   Expression: __webpack_require__(2),
   ExpressionList: __webpack_require__(4),
@@ -306,14 +306,14 @@ module.exports = {
   IdentifierList: __webpack_require__(10),
   Integer: __webpack_require__(32),
   Interpreter: __webpack_require__(14),
-  Literal: __webpack_require__(8),
+  Literal: __webpack_require__(6),
   Next: __webpack_require__(9),
   Optional: __webpack_require__(3),
   Or: __webpack_require__(1),
   RequiredWhitespace: __webpack_require__(33),
   Rule: __webpack_require__(0),
   Statement: __webpack_require__(11),
-  StatementList: __webpack_require__(6)
+  StatementList: __webpack_require__(7)
 };
 
 /***/ }),
@@ -331,26 +331,26 @@ module.exports = (grammar) => grammar.addList({
 })
 .addCustom({
   Alias: 'ArrayItem',
-  Tokens: {
-    "value": Or(Rule('ArraySpread'), Rule('ArrayRange'), Rule('ArrayItemExpression'))
-  },
+  Tokens: [
+    ["value", Or(Rule('ArraySpread'), Rule('ArrayRange'), Rule('ArrayItemExpression'))]
+  ],
   Handler: ({ value }, context) => value.evaluate(context)
 })
 .addCustom({
   Alias: 'ArraySpread',
-  Tokens: {
-    'spreadOperator': '...',
-    'value': Expression
-  },
+  Tokens: [
+    ['spreadOperator', '...'],
+    ['value', Expression]
+  ],
   Handler: ({ value }, context) => ({ [Symbol.for('type')]: 'spread', value: value.evaluate(context) })
 })
 .addCustom({
   Alias: 'ArrayRange',
-  Tokens: {
-    start: Expression,
-    'spread': '...',
-    end: Expression
-  },
+  Tokens: [
+    ["start", Expression],
+    ['spread', '...'],
+    ["end", Expression]
+  ],
   Handler: ({ start, end }, context) => {
     start = start.evaluate(context);
     end = end.evaluate(context);
@@ -363,18 +363,18 @@ module.exports = (grammar) => grammar.addList({
 })
 .addCustom({
   Alias: 'ArrayItemExpression',
-  Tokens: {
-    "expression": Expression,
-  },
+  Tokens: [
+    ["expression", Expression],
+  ],
   Handler: ({ expression }, context) => ({ [Symbol.for('type')]: 'item', value: expression.evaluate(context) })
 })
 .addExpression({
   Alias: 'ArrayExpression',
-  Tokens: {
-    "openBrace": "[",
-    "expressionList": Rule('ArrayItemList'),
-    "closeBrace": "]"
-  },
+  Tokens: [
+    ["openBrace", "["],
+    ["expressionList", Rule('ArrayItemList')],
+    ["closeBrace", "]"]
+  ],
   Handler: ({ expressionList }, context) => {
     let result = [];
     for (const expression of expressionList) {
@@ -398,17 +398,17 @@ const Or = __webpack_require__(1);
 const Identifier = __webpack_require__(5);
 const IdentifierList = __webpack_require__(10);
 const Optional = __webpack_require__(3);
-const StatementList = __webpack_require__(6);
+const StatementList = __webpack_require__(7);
 const Expression = __webpack_require__(2);
-const evaluateStatements = __webpack_require__(7);
+const evaluateStatements = __webpack_require__(8);
 module.exports = (g) => g
 .addCustom({
   Alias: 'ArrowFunctionCodeBlock',
-  Tokens: {
-    "open_brace": "{",
-    statements: StatementList,
-    "close_brace": "}"
-  },
+  Tokens: [
+    ["open_brace", "{"],
+    ["statements", StatementList],
+    ["close_brace", "}"]
+  ],
   Handler: ({ statements }, context) => {
     return evaluateStatements(statements, context);
   }
@@ -440,11 +440,11 @@ module.exports = (g) => g
 })
 .addCustom({
   Alias: 'FunctionParameters',
-  Tokens: {
-    "open": "(",
-    "parameters": Optional(IdentifierList),
-    "close": ")"
-  },
+  Tokens: [
+    ["open", "("],
+    ["parameters", Optional(IdentifierList)],
+    ["close", ")"]
+  ],
   Handler: ({ parameters, }, context) => {
     return parameters;
   }
@@ -489,8 +489,10 @@ module.exports = (g) => g.addBinaryExpression({
 
 /***/ }),
 /* 19 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
+const Or = __webpack_require__(1);
+const Literal = __webpack_require__(6);
 module.exports = g => g
   .addUnaryExpression({
     Alias: 'Not',
@@ -498,18 +500,11 @@ module.exports = g => g
     Handler: ({ expression }, context) => !expression.evaluate(context)
   })
   .addExpression({
-    Alias: 'True',
-    Tokens: {
-     'value': 'true',
-    },
-    Handler: () => true
-  })
-  .addExpression({
-    Alias: 'False',
-    Tokens: {
-      'value': 'false',
-    },
-    Handler: () => false
+    Alias: 'Boolean',
+    Tokens: [
+      ['value', Or(Literal('true'), Literal('false'))]
+    ],
+    Handler: ({ value }) => value === "true"
   })
   .reserve("true", "false")
 
@@ -521,11 +516,11 @@ const ExpressionList = __webpack_require__(4);
 module.exports = g => g
   .addExpression({
     Alias: 'Grouping',
-    Tokens: {
-      "open": "(",
-      "expressions": ExpressionList,
-      "close": ")"
-    },
+    Tokens: [
+      ["open", "("],
+      ["expressions", ExpressionList],
+      ["close", ")"]
+    ],
     Handler: ({ expressions }, context) => evaluateExpressions(expressions, context)
   })
 
@@ -535,22 +530,22 @@ module.exports = g => g
 
 const Rule = __webpack_require__(0);
 const Expression = __webpack_require__(2);
-const StatementList = __webpack_require__(6);
+const StatementList = __webpack_require__(7);
 const Or = __webpack_require__(1);
-const evaluateStatements = __webpack_require__(7);
+const evaluateStatements = __webpack_require__(8);
 const Optional = __webpack_require__(3);
 const Statement = __webpack_require__(11);
 module.exports = (g) =>
   g.addStatement({
     Alias: 'IfStatement',
-    Tokens: {
-      "ifKeyword": 'if',
-      "open": "(",
-      "conditional": Expression,
-      "close": ")",
-      "block": Or(Statement, Rule('IfCodeBlock')),
-      "elseBlock": Optional(Rule('ElseIfBlock'))
-    },
+    Tokens: [
+      ["ifKeyword", 'if'],
+      ["open", "("],
+      ["conditional", Expression],
+      ["close", ")"],
+      ["block", Or(Statement, Rule('IfCodeBlock'))],
+      ["elseBlock", Optional(Rule('ElseIfBlock'))]
+    ],
     Handler: ({ conditional, block, elseBlock }, context) => {
       if (conditional.evaluate(context)) {
         return block.evaluate(context);
@@ -561,19 +556,15 @@ module.exports = (g) =>
   })
   .addCustom({
     Alias: 'IfCodeBlock',
-    Tokens: {
-      'open': '{',
-      'statements': StatementList,
-      'close': '}'
-    },
+    Tokens: [['open', '{'], ['statements', StatementList], ['close', '}']],
     Handler: ({ statements }, context) => evaluateStatements(statements, context)
   })
   .addCustom({
     Alias: 'ElseIfBlock',
-    Tokens: {
-      'elseKeyword': 'else',
-      'block': Or(Rule('IfStatement'), Rule('IfCodeBlock'))
-    },
+    Tokens: [
+      ['elseKeyword', 'else'],
+      ['block', Or(Rule('IfStatement'), Rule('IfCodeBlock'))]
+    ],
     Handler: ({ block }, context) => block.evaluate(context)
   })
   .reserve('if', 'else')
@@ -629,10 +620,10 @@ const ExpressionList = __webpack_require__(4);
 module.exports = (g) => g
   .addExpression({
     Alias: 'MemberExpression',
-    Tokens: {
-      root: Identifier,
-      path: Optional(Rule('MemberExpressionPathItemList'))
-    },
+    Tokens: [
+      ["root", Identifier],
+      ["path", Optional(Rule('MemberExpressionPathItemList'))]
+    ],
     Handler: ({ root, path }, context) => {
       let target = context[root.value];
       path = path || [];
@@ -651,26 +642,21 @@ module.exports = (g) => g
   })
   .addCustom({
     Alias: 'MemberExpressionPathItem',
-    Tokens: {
-      "pathItem": Or(Rule('IdentifierProperty'), Rule('DynamicProperty'))
-    },
+    Tokens: [["pathItem", Or(Rule('IdentifierProperty'), Rule('DynamicProperty'))]],
     Handler: ({ pathItem }, context) => pathItem.evaluate(context)
   })
   .addCustom({
     Alias: 'IdentifierProperty',
-    Tokens: {
-      "dot": '.',
-      "pathItem": Identifier
-    },
+    Tokens: [["dot", '.'], ["pathItem", Identifier]],
     Handler: ({ pathItem }) => pathItem.value
   })
   .addCustom({
     Alias: 'DynamicProperty',
-    Tokens: {
-      'openBracket': '[',
-      'expressions': ExpressionList,
-      'closeBracket': ']'
-    },
+    Tokens: [
+      ['openBracket', '['],
+      ['expressions', ExpressionList],
+      ['closeBracket', ']']
+    ],
     Handler: ({ expressions }, context) => {
       let value;
       for(const expression of expressions) {
@@ -688,7 +674,7 @@ module.exports = (g) => g
 
 const Rule = __webpack_require__(0);
 const Or = __webpack_require__(1);
-const Literal = __webpack_require__(8);
+const Literal = __webpack_require__(6);
 const Expression = __webpack_require__(2);
 const Identifier = __webpack_require__(5);
 
@@ -699,35 +685,28 @@ module.exports = (grammar) => grammar.addList({
 })
 .addCustom({
   Alias: 'ObjectExpressionItem',
-  Tokens: {
-    "value": Or(Rule('ObjectSpread'), Rule('KeyValuePair'))
-  },
+  Tokens: [
+    ["value", Or(Rule('ObjectSpread'), Rule('KeyValuePair'))]
+  ],
   Handler: ({ value }, context) => value.evaluate(context)
 })
 .addCustom({
   Alias: 'ObjectSpread',
-  Tokens: {
-    'spreadOperator': '...',
-    'value': Expression
-  },
+  Tokens: [['spreadOperator', '...'], ['value', Expression]],
   Handler: ({ value }, context) => ({ [Symbol.for('type')]: 'spread', value: value.evaluate(context) })
 })
 .addCustom({
   Alias: 'KeyValuePair',
-  Tokens: {
-    "key": Identifier,
-    "seperator": ":",
-    "expression": Expression,
-  },
+  Tokens: [["key", Identifier], ["seperator", ":"], ["expression", Expression]],
   Handler: ({ key, expression }, context) => ({ [Symbol.for('type')]: 'keypair', key, value: expression.evaluate(context) })
 })
 .addExpression({
   Alias: 'ObjectExpression',
-  Tokens: {
-    "openBrace": "{",
-    "expressionList": Rule('ObjectExpressionItemList'),
-    "closeBrace": "}"
-  },
+  Tokens: [
+    ["openBrace", "{"],
+    ["expressionList", Rule('ObjectExpressionItemList')],
+    ["closeBrace", "}"]
+  ],
   Handler: ({ expressionList }, context) => {
     let result = {};
     for (const expression of expressionList) {
@@ -753,21 +732,17 @@ const ExpressionList = __webpack_require__(4);
 
 module.exports = (g) => g.addExpression({
   Alias: 'Transform',
-  Tokens: {
-    left: Next,
-    operator: '|',
-    right: Rule('MemberExpression'),
-    parameters: Optional(Rule('TransformParameters'))
-  },
+  Tokens: [
+    ["left", Next],
+    ["operator", '|'],
+    ["right", Rule('MemberExpression')],
+    ["parameters", Optional(Rule('TransformParameters'))]
+  ],
   Handler: ({ left, right, parameters }, context) => right.evaluate(context)(left.evaluate(context), ...(parameters ? parameters.evaluate(context) : []))
 })
 .addCustom({
   Alias: 'TransformParameters',
-  Tokens: {
-    "open": "(",
-    "expressions": Optional(ExpressionList),
-    "close": ")"
-  },
+  Tokens: [["open", "("], ["expressions", Optional(ExpressionList)], ["close", ")"]],
   Handler: ({ expressions, }, context) => {
     const result = [];
     for(const expression of expressions) {
@@ -813,7 +788,7 @@ module.exports = async (statements, context) => {
 const Rule = __webpack_require__(0);
 const Next = __webpack_require__(9);
 const Current = __webpack_require__(13);
-const Literal = __webpack_require__(8);
+const Literal = __webpack_require__(6);
 const Interpreter = __webpack_require__(14);
 const range = (fr, to) => {
   let result = [];
@@ -846,11 +821,11 @@ module.exports = class Grammar {
   addBinaryExpression(options) {
     return this.addRule({
       Alias: options.Alias,
-      Tokens: {
-        "left": options.Left || Next,
-        "operator": Literal(options.Operator),
-        "right": options.Right || Current,
-      },
+      Tokens: [
+        ["left", options.Left || Next],
+        ["operator", Literal(options.Operator)],
+        ["right", options.Right || Current],
+      ],
       Type: 'E',
       Handler: options.Handler
     });
@@ -859,8 +834,8 @@ module.exports = class Grammar {
     return this.addRule({
       Alias: options.Alias,
       Tokens: options.Type === 'right'
-        ? { "expression": options.Expression || Next, "operator": Literal(options.Operator) }
-        : { "operator": Literal(options.Operator), "expression": options.Expression || Current },
+        ? [ ["expression", options.Expression || Next], ["operator", Literal(options.Operator)] ]
+        : [ [ "operator", Literal(options.Operator)], ["expression", options.Expression || Current] ],
       Type: 'E',
       Handler: options.Handler
     });
@@ -906,7 +881,7 @@ ${Alias ? `${Alias} = ${Name}
     nodeType: "${Type}",
     type: "${Name}",
     evaluate,
-    props: { ${Object.getOwnPropertyNames(Tokens).join(', ')} },
+    props: { ${Tokens.map(x => x[0]).join(', ')} },
     text: text(),
     location: location()
   };
@@ -928,9 +903,9 @@ ${options.Alias} = first:${ListItemType} last:(${TerminatorString} _ ${ListItemT
   }
   spliceTokens(Tokens, NextName, CurrentName) {
     let result = '';
-    let entries = Object.entries(Tokens);
-    for (let i = 0; i < entries.length; i++) {
-      let [Key, Token] = entries[i];
+    
+    for (let i = 0; i < Tokens.length; i++) {
+      let [Key, Token] = Tokens[i];
       result += (Token.constructor === String ? Literal(Token) : Token).generate(Key, NextName, CurrentName).toString();
     }
     return result;

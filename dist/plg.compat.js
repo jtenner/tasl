@@ -177,10 +177,34 @@ module.exports = __webpack_require__(0)('Identifier');
 "use strict";
 
 
-module.exports = __webpack_require__(0)('StatementList');
+module.exports = function (Value) {
+  var Insensitive = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  return {
+    Type: 'Literal',
+    Value: Value,
+    Insensitive: Insensitive,
+    generate: function generate(Key, NextRule, CurrentRule) {
+      return {
+        value: ' ' + Key + ':"' + this.Value.replace(/"/g, '\\"') + '"' + (this.Insensitive ? "i" : ""),
+        toString: function toString() {
+          return this.value + " _";
+        }
+      };
+    }
+  };
+};
 
 /***/ }),
 /* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = __webpack_require__(0)('StatementList');
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -226,30 +250,6 @@ module.exports = function (statements, context) {
   }
 
   return [null, value];
-};
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function (Value) {
-  var Insensitive = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-  return {
-    Type: 'Literal',
-    Value: Value,
-    Insensitive: Insensitive,
-    generate: function generate(Key, NextRule, CurrentRule) {
-      return {
-        value: ' ' + Key + ':"' + this.Value.replace(/"/g, '\\"') + '"' + (this.Insensitive ? "i" : ""),
-        toString: function toString() {
-          return this.value + " _";
-        }
-      };
-    }
-  };
 };
 
 /***/ }),
@@ -491,7 +491,7 @@ module.exports = {
   Current: __webpack_require__(13),
   evaluateExpressions: __webpack_require__(12),
   evaluateExpressionsAsync: __webpack_require__(26),
-  evaluateStatements: __webpack_require__(7),
+  evaluateStatements: __webpack_require__(8),
   evaluateStatementsAsync: __webpack_require__(27),
   Expression: __webpack_require__(2),
   ExpressionList: __webpack_require__(4),
@@ -500,14 +500,14 @@ module.exports = {
   IdentifierList: __webpack_require__(10),
   Integer: __webpack_require__(32),
   Interpreter: __webpack_require__(14),
-  Literal: __webpack_require__(8),
+  Literal: __webpack_require__(6),
   Next: __webpack_require__(9),
   Optional: __webpack_require__(3),
   Or: __webpack_require__(1),
   RequiredWhitespace: __webpack_require__(33),
   Rule: __webpack_require__(0),
   Statement: __webpack_require__(11),
-  StatementList: __webpack_require__(6)
+  StatementList: __webpack_require__(7)
 };
 
 /***/ }),
@@ -532,19 +532,14 @@ module.exports = function (grammar) {
     Terminator: ','
   }).addCustom({
     Alias: 'ArrayItem',
-    Tokens: {
-      "value": Or(Rule('ArraySpread'), Rule('ArrayRange'), Rule('ArrayItemExpression'))
-    },
+    Tokens: [["value", Or(Rule('ArraySpread'), Rule('ArrayRange'), Rule('ArrayItemExpression'))]],
     Handler: function Handler(_ref, context) {
       var value = _ref.value;
       return value.evaluate(context);
     }
   }).addCustom({
     Alias: 'ArraySpread',
-    Tokens: {
-      'spreadOperator': '...',
-      'value': Expression
-    },
+    Tokens: [['spreadOperator', '...'], ['value', Expression]],
     Handler: function Handler(_ref2, context) {
       var _ref3;
 
@@ -553,11 +548,7 @@ module.exports = function (grammar) {
     }
   }).addCustom({
     Alias: 'ArrayRange',
-    Tokens: {
-      start: Expression,
-      'spread': '...',
-      end: Expression
-    },
+    Tokens: [["start", Expression], ['spread', '...'], ["end", Expression]],
     Handler: function Handler(_ref4, context) {
       var _ref5;
 
@@ -574,9 +565,7 @@ module.exports = function (grammar) {
     }
   }).addCustom({
     Alias: 'ArrayItemExpression',
-    Tokens: {
-      "expression": Expression
-    },
+    Tokens: [["expression", Expression]],
     Handler: function Handler(_ref6, context) {
       var _ref7;
 
@@ -585,11 +574,7 @@ module.exports = function (grammar) {
     }
   }).addExpression({
     Alias: 'ArrayExpression',
-    Tokens: {
-      "openBrace": "[",
-      "expressionList": Rule('ArrayItemList'),
-      "closeBrace": "]"
-    },
+    Tokens: [["openBrace", "["], ["expressionList", Rule('ArrayItemList')], ["closeBrace", "]"]],
     Handler: function Handler(_ref8, context) {
       var expressionList = _ref8.expressionList;
 
@@ -643,17 +628,13 @@ var Or = __webpack_require__(1);
 var Identifier = __webpack_require__(5);
 var IdentifierList = __webpack_require__(10);
 var Optional = __webpack_require__(3);
-var StatementList = __webpack_require__(6);
+var StatementList = __webpack_require__(7);
 var Expression = __webpack_require__(2);
-var evaluateStatements = __webpack_require__(7);
+var evaluateStatements = __webpack_require__(8);
 module.exports = function (g) {
   return g.addCustom({
     Alias: 'ArrowFunctionCodeBlock',
-    Tokens: {
-      "open_brace": "{",
-      statements: StatementList,
-      "close_brace": "}"
-    },
+    Tokens: [["open_brace", "{"], ["statements", StatementList], ["close_brace", "}"]],
     Handler: function Handler(_ref, context) {
       var statements = _ref.statements;
 
@@ -699,11 +680,7 @@ module.exports = function (g) {
     }
   }).addCustom({
     Alias: 'FunctionParameters',
-    Tokens: {
-      "open": "(",
-      "parameters": Optional(IdentifierList),
-      "close": ")"
-    },
+    Tokens: [["open", "("], ["parameters", Optional(IdentifierList)], ["close", ")"]],
     Handler: function Handler(_ref3, context) {
       var parameters = _ref3.parameters;
 
@@ -765,6 +742,8 @@ module.exports = function (g) {
 "use strict";
 
 
+var Or = __webpack_require__(1);
+var Literal = __webpack_require__(6);
 module.exports = function (g) {
   return g.addUnaryExpression({
     Alias: 'Not',
@@ -774,20 +753,11 @@ module.exports = function (g) {
       return !expression.evaluate(context);
     }
   }).addExpression({
-    Alias: 'True',
-    Tokens: {
-      'value': 'true'
-    },
-    Handler: function Handler() {
-      return true;
-    }
-  }).addExpression({
-    Alias: 'False',
-    Tokens: {
-      'value': 'false'
-    },
-    Handler: function Handler() {
-      return false;
+    Alias: 'Boolean',
+    Tokens: [['value', Or(Literal('true'), Literal('false'))]],
+    Handler: function Handler(_ref2) {
+      var value = _ref2.value;
+      return value === "true";
     }
   }).reserve("true", "false");
 };
@@ -803,11 +773,7 @@ var ExpressionList = __webpack_require__(4);
 module.exports = function (g) {
   return g.addExpression({
     Alias: 'Grouping',
-    Tokens: {
-      "open": "(",
-      "expressions": ExpressionList,
-      "close": ")"
-    },
+    Tokens: [["open", "("], ["expressions", ExpressionList], ["close", ")"]],
     Handler: function Handler(_ref, context) {
       var expressions = _ref.expressions;
       return evaluateExpressions(expressions, context);
@@ -824,22 +790,15 @@ module.exports = function (g) {
 
 var Rule = __webpack_require__(0);
 var Expression = __webpack_require__(2);
-var StatementList = __webpack_require__(6);
+var StatementList = __webpack_require__(7);
 var Or = __webpack_require__(1);
-var evaluateStatements = __webpack_require__(7);
+var evaluateStatements = __webpack_require__(8);
 var Optional = __webpack_require__(3);
 var Statement = __webpack_require__(11);
 module.exports = function (g) {
   return g.addStatement({
     Alias: 'IfStatement',
-    Tokens: {
-      "ifKeyword": 'if',
-      "open": "(",
-      "conditional": Expression,
-      "close": ")",
-      "block": Or(Statement, Rule('IfCodeBlock')),
-      "elseBlock": Optional(Rule('ElseIfBlock'))
-    },
+    Tokens: [["ifKeyword", 'if'], ["open", "("], ["conditional", Expression], ["close", ")"], ["block", Or(Statement, Rule('IfCodeBlock'))], ["elseBlock", Optional(Rule('ElseIfBlock'))]],
     Handler: function Handler(_ref, context) {
       var conditional = _ref.conditional,
           block = _ref.block,
@@ -853,21 +812,14 @@ module.exports = function (g) {
     }
   }).addCustom({
     Alias: 'IfCodeBlock',
-    Tokens: {
-      'open': '{',
-      'statements': StatementList,
-      'close': '}'
-    },
+    Tokens: [['open', '{'], ['statements', StatementList], ['close', '}']],
     Handler: function Handler(_ref2, context) {
       var statements = _ref2.statements;
       return evaluateStatements(statements, context);
     }
   }).addCustom({
     Alias: 'ElseIfBlock',
-    Tokens: {
-      'elseKeyword': 'else',
-      'block': Or(Rule('IfStatement'), Rule('IfCodeBlock'))
-    },
+    Tokens: [['elseKeyword', 'else'], ['block', Or(Rule('IfStatement'), Rule('IfCodeBlock'))]],
     Handler: function Handler(_ref3, context) {
       var block = _ref3.block;
       return block.evaluate(context);
@@ -950,10 +902,7 @@ var ExpressionList = __webpack_require__(4);
 module.exports = function (g) {
   return g.addExpression({
     Alias: 'MemberExpression',
-    Tokens: {
-      root: Identifier,
-      path: Optional(Rule('MemberExpressionPathItemList'))
-    },
+    Tokens: [["root", Identifier], ["path", Optional(Rule('MemberExpressionPathItemList'))]],
     Handler: function Handler(_ref, context) {
       var root = _ref.root,
           path = _ref.path;
@@ -995,30 +944,21 @@ module.exports = function (g) {
     Rule: 'MemberExpressionPathItem'
   }).addCustom({
     Alias: 'MemberExpressionPathItem',
-    Tokens: {
-      "pathItem": Or(Rule('IdentifierProperty'), Rule('DynamicProperty'))
-    },
+    Tokens: [["pathItem", Or(Rule('IdentifierProperty'), Rule('DynamicProperty'))]],
     Handler: function Handler(_ref2, context) {
       var pathItem = _ref2.pathItem;
       return pathItem.evaluate(context);
     }
   }).addCustom({
     Alias: 'IdentifierProperty',
-    Tokens: {
-      "dot": '.',
-      "pathItem": Identifier
-    },
+    Tokens: [["dot", '.'], ["pathItem", Identifier]],
     Handler: function Handler(_ref3) {
       var pathItem = _ref3.pathItem;
       return pathItem.value;
     }
   }).addCustom({
     Alias: 'DynamicProperty',
-    Tokens: {
-      'openBracket': '[',
-      'expressions': ExpressionList,
-      'closeBracket': ']'
-    },
+    Tokens: [['openBracket', '['], ['expressions', ExpressionList], ['closeBracket', ']']],
     Handler: function Handler(_ref4, context) {
       var expressions = _ref4.expressions;
 
@@ -1064,7 +1004,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var Rule = __webpack_require__(0);
 var Or = __webpack_require__(1);
-var Literal = __webpack_require__(8);
+var Literal = __webpack_require__(6);
 var Expression = __webpack_require__(2);
 var Identifier = __webpack_require__(5);
 
@@ -1075,19 +1015,14 @@ module.exports = function (grammar) {
     Terminator: ','
   }).addCustom({
     Alias: 'ObjectExpressionItem',
-    Tokens: {
-      "value": Or(Rule('ObjectSpread'), Rule('KeyValuePair'))
-    },
+    Tokens: [["value", Or(Rule('ObjectSpread'), Rule('KeyValuePair'))]],
     Handler: function Handler(_ref, context) {
       var value = _ref.value;
       return value.evaluate(context);
     }
   }).addCustom({
     Alias: 'ObjectSpread',
-    Tokens: {
-      'spreadOperator': '...',
-      'value': Expression
-    },
+    Tokens: [['spreadOperator', '...'], ['value', Expression]],
     Handler: function Handler(_ref2, context) {
       var _ref3;
 
@@ -1096,11 +1031,7 @@ module.exports = function (grammar) {
     }
   }).addCustom({
     Alias: 'KeyValuePair',
-    Tokens: {
-      "key": Identifier,
-      "seperator": ":",
-      "expression": Expression
-    },
+    Tokens: [["key", Identifier], ["seperator", ":"], ["expression", Expression]],
     Handler: function Handler(_ref4, context) {
       var _ref5;
 
@@ -1110,11 +1041,7 @@ module.exports = function (grammar) {
     }
   }).addExpression({
     Alias: 'ObjectExpression',
-    Tokens: {
-      "openBrace": "{",
-      "expressionList": Rule('ObjectExpressionItemList'),
-      "closeBrace": "}"
-    },
+    Tokens: [["openBrace", "{"], ["expressionList", Rule('ObjectExpressionItemList')], ["closeBrace", "}"]],
     Handler: function Handler(_ref6, context) {
       var expressionList = _ref6.expressionList;
 
@@ -1171,12 +1098,7 @@ var ExpressionList = __webpack_require__(4);
 module.exports = function (g) {
   return g.addExpression({
     Alias: 'Transform',
-    Tokens: {
-      left: Next,
-      operator: '|',
-      right: Rule('MemberExpression'),
-      parameters: Optional(Rule('TransformParameters'))
-    },
+    Tokens: [["left", Next], ["operator", '|'], ["right", Rule('MemberExpression')], ["parameters", Optional(Rule('TransformParameters'))]],
     Handler: function Handler(_ref, context) {
       var left = _ref.left,
           right = _ref.right,
@@ -1185,11 +1107,7 @@ module.exports = function (g) {
     }
   }).addCustom({
     Alias: 'TransformParameters',
-    Tokens: {
-      "open": "(",
-      "expressions": Optional(ExpressionList),
-      "close": ")"
-    },
+    Tokens: [["open", "("], ["expressions", Optional(ExpressionList)], ["close", ")"]],
     Handler: function Handler(_ref2, context) {
       var expressions = _ref2.expressions;
 
@@ -1326,7 +1244,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Rule = __webpack_require__(0);
 var Next = __webpack_require__(9);
 var Current = __webpack_require__(13);
-var Literal = __webpack_require__(8);
+var Literal = __webpack_require__(6);
 var Interpreter = __webpack_require__(14);
 var range = function range(fr, to) {
   var result = [];
@@ -1366,11 +1284,7 @@ module.exports = function () {
     value: function addBinaryExpression(options) {
       return this.addRule({
         Alias: options.Alias,
-        Tokens: {
-          "left": options.Left || Next,
-          "operator": Literal(options.Operator),
-          "right": options.Right || Current
-        },
+        Tokens: [["left", options.Left || Next], ["operator", Literal(options.Operator)], ["right", options.Right || Current]],
         Type: 'E',
         Handler: options.Handler
       });
@@ -1380,7 +1294,7 @@ module.exports = function () {
     value: function addUnaryExpression(options) {
       return this.addRule({
         Alias: options.Alias,
-        Tokens: options.Type === 'right' ? { "expression": options.Expression || Next, "operator": Literal(options.Operator) } : { "operator": Literal(options.Operator), "expression": options.Expression || Current },
+        Tokens: options.Type === 'right' ? [["expression", options.Expression || Next], ["operator", Literal(options.Operator)]] : [["operator", Literal(options.Operator)], ["expression", options.Expression || Current]],
         Type: 'E',
         Handler: options.Handler
       });
@@ -1439,7 +1353,9 @@ module.exports = function () {
       var Name = '' + Type + this.counts[Type];
       this.handler[Type][Name] = Handler;
       var NextName = '' + Type + (this.counts[Type] + 1);
-      this.grammar += '\n' + (Alias ? Alias + ' = ' + Name + '\n' : '') + Name + ' = ' + this.spliceTokens(Tokens, NextName, Name) + ' {\n  return {\n    alias: "' + Alias + '",\n    nodeType: "' + Type + '",\n    type: "' + Name + '",\n    evaluate,\n    props: { ' + Object.getOwnPropertyNames(Tokens).join(', ') + ' },\n    text: text(),\n    location: location()\n  };\n} ' + (Type === 'S' || Type === 'E' ? '/ ' + NextName : '') + '\n';
+      this.grammar += '\n' + (Alias ? Alias + ' = ' + Name + '\n' : '') + Name + ' = ' + this.spliceTokens(Tokens, NextName, Name) + ' {\n  return {\n    alias: "' + Alias + '",\n    nodeType: "' + Type + '",\n    type: "' + Name + '",\n    evaluate,\n    props: { ' + Tokens.map(function (x) {
+        return x[0];
+      }).join(', ') + ' },\n    text: text(),\n    location: location()\n  };\n} ' + (Type === 'S' || Type === 'E' ? '/ ' + NextName : '') + '\n';
       return this;
     }
   }, {
@@ -1455,11 +1371,11 @@ module.exports = function () {
     key: 'spliceTokens',
     value: function spliceTokens(Tokens, NextName, CurrentName) {
       var result = '';
-      var entries = Object.entries(Tokens);
-      for (var i = 0; i < entries.length; i++) {
-        var _entries$i = _slicedToArray(entries[i], 2),
-            Key = _entries$i[0],
-            Token = _entries$i[1];
+
+      for (var i = 0; i < Tokens.length; i++) {
+        var _Tokens$i = _slicedToArray(Tokens[i], 2),
+            Key = _Tokens$i[0],
+            Token = _Tokens$i[1];
 
         result += (Token.constructor === String ? Literal(Token) : Token).generate(Key, NextName, CurrentName).toString();
       }
