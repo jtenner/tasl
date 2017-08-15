@@ -5,8 +5,7 @@ let config = {
     entry: './index.js',
     output: null,
     externals: {
-        pegjs: 'pegjs',
-        fs: 'fs'
+        pegjs: 'pegjs'
     }
 };
 let babelConfig = {
@@ -19,24 +18,24 @@ let babelConfig = {
 let output = (filename) => ({
     path: path.resolve(__dirname, 'dist'),
     filename,
-    library: 'plg',
+    library: 'tasl',
     libraryTarget: 'umd'
 });
 module.exports = [
     Object.assign({}, config, {
-        output: output('plg.js'),
+        output: output('tasl.js'),
     }),
     Object.assign({}, config, {
-        output: output('plg.min.js'),
+        output: output('tasl.min.js'),
         plugins: [
             new Babili()
         ]
     }),
     Object.assign({}, config, babelConfig, {
-        output: output('plg.compat.js')
+        output: output('tasl.compat.js')
     }),
     Object.assign({}, config, babelConfig, {
-        output: output('plg.compat.min.js'),
+        output: output('tasl.compat.min.js'),
         plugins: [
             new Babili()
         ]

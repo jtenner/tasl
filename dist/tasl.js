@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("pegjs"), (function webpackLoadOptionalExternalModule() { try { return require("fs"); } catch(e) {} }()));
+		module.exports = factory(require("pegjs"));
 	else if(typeof define === 'function' && define.amd)
-		define(["pegjs", "fs"], factory);
+		define(["pegjs"], factory);
 	else if(typeof exports === 'object')
-		exports["plg"] = factory(require("pegjs"), (function webpackLoadOptionalExternalModule() { try { return require("fs"); } catch(e) {} }()));
+		exports["tasl"] = factory(require("pegjs"));
 	else
-		root["plg"] = factory(root["pegjs"], root["fs"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_29__, __WEBPACK_EXTERNAL_MODULE_30__) {
+		root["tasl"] = factory(root["pegjs"]);
+})(this, function(__WEBPACK_EXTERNAL_MODULE_29__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -242,12 +242,6 @@ const PEG = __webpack_require__(29);
 module.exports = class Interpreter {
   constructor(grammar, handler) {
     this.grammar = grammar;
-    let ex;
-    try {
-      __webpack_require__(30).writeFileSync('./grammar.pegjs', this.grammar, 'utf8');
-    } catch (ex) {
-
-    }
     this.parser = PEG.generate(grammar);
     this.parser.handler = handler;
   }
@@ -304,13 +298,13 @@ module.exports = {
   Grammar: __webpack_require__(28),
   Identifier: __webpack_require__(5),
   IdentifierList: __webpack_require__(10),
-  Integer: __webpack_require__(32),
+  Integer: __webpack_require__(31),
   Interpreter: __webpack_require__(14),
   Literal: __webpack_require__(6),
   Next: __webpack_require__(9),
   Optional: __webpack_require__(3),
   Or: __webpack_require__(1),
-  RequiredWhitespace: __webpack_require__(33),
+  RequiredWhitespace: __webpack_require__(32),
   Rule: __webpack_require__(0),
   Statement: __webpack_require__(11),
   StatementList: __webpack_require__(7)
@@ -812,7 +806,7 @@ module.exports = class Grammar {
     };
     this.keywords = [];
     this.terminator = ";";
-    this.grammar = __webpack_require__(31);
+    this.grammar = __webpack_require__(30);
   }
   setTerminator(value) {
     this.terminator = value;
@@ -939,17 +933,10 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_29__;
 /* 30 */
 /***/ (function(module, exports) {
 
-if(typeof __WEBPACK_EXTERNAL_MODULE_30__ === 'undefined') {var e = new Error("Cannot find module \"fs\""); e.code = 'MODULE_NOT_FOUND'; throw e;}
-module.exports = __WEBPACK_EXTERNAL_MODULE_30__;
+module.exports = "{\r\n  const { handler } = this;\r\n\r\n  function evaluate(context) {\r\n    return handler[this.nodeType][this.type](this.props, context);\r\n  }\r\n  handler.S.SExpressionStatement = function SExpressionStatement({ expressions }, context) {\r\n    let value;\r\n    for(const expression of expressions) {\r\n      value = expression.evaluate(context);\r\n    }\r\n    return [null, value];\r\n  };\r\n  handler.E.EReturnValue = function EReturnValue({ value }) { return value; }\r\n}\r\n\r\nProgram = _ statements:StatementList _ {\r\n  return statements;\r\n}\r\n\r\nStatementList = first:Statement last:(_ Statement)* {\r\n  return [first, ...last.map(x => x[1])];\r\n}\r\nExpressionList = first:Expression last:(_ ',' _ Expression)* {\r\n  return [first, ...last.map(x => x[3])];\r\n}\r\nIdentifier = !Keyword [a-zA-Z$_][a-zA-Z$_0-9]* {\r\n  return {\r\n    nodeType: 'I',\r\n    type: 'Identifier',\r\n    value: text(),\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\nIdentifierList = first:Identifier last:(_ \",\" _ Identifier)* {\r\n  return [first, ...last.map(x => x[3])];\r\n}\r\n\r\nStatement = S0\r\nExpression = E0\r\n\r\nExpressionExit = Float\r\n\r\nFloat = [0-9]+ \".\" [0-9]+ {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: parseFloat(text()),\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n} / Integer\r\n\r\nInteger = [0-9]+ {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: parseInt(text(), 10),\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n} / Null\r\n\r\nNull = \"null\" {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: null,\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\n\r\nStatementExit = ExpressionStatement\r\n\r\nExpressionStatement = expressions:ExpressionList _ Terminator? {\r\n  return {\r\n    alias: 'ExpressionStatement',\r\n    nodeType: \"S\",\r\n    type: 'SExpressionStatement',\r\n    evaluate,\r\n    props: { expressions },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\n\r\n_ = [\\t\\r\\n ]*\r\n__ = [\\t\\r\\n ]+"
 
 /***/ }),
 /* 31 */
-/***/ (function(module, exports) {
-
-module.exports = "{\r\n  const { handler } = this;\r\n\r\n  function evaluate(context) {\r\n    return handler[this.nodeType][this.type](this.props, context);\r\n  }\r\n  handler.S.SExpressionStatement = function SExpressionStatement({ expressions }, context) {\r\n    let value;\r\n    for(const expression of expressions) {\r\n      value = expression.evaluate(context);\r\n    }\r\n    return [null, value];\r\n  };\r\n  handler.E.EReturnValue = function EReturnValue({ value }) { return value; }\r\n}\r\n\r\nProgram = _ statements:StatementList _ {\r\n  return statements;\r\n}\r\n\r\nStatementList = first:Statement last:(_ Statement)* {\r\n  return [first, ...last.map(x => x[1])];\r\n}\r\nExpressionList = first:Expression last:(_ ',' _ Expression)* {\r\n  return [first, ...last.map(x => x[3])];\r\n}\r\nIdentifier = !Keyword [a-zA-Z$_][a-zA-Z$_0-9]* {\r\n  return {\r\n    nodeType: 'I',\r\n    type: 'Identifier',\r\n    value: text(),\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\nIdentifierList = first:Identifier last:(_ \",\" _ Identifier) {\r\n  return [first, ...last.map(x => x[3])];\r\n}\r\n\r\nStatement = S0\r\nExpression = E0\r\n\r\nExpressionExit = Float\r\n\r\nFloat = [0-9]+ \".\" [0-9]+ {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: parseFloat(text()),\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n} / Integer\r\n\r\nInteger = [0-9]+ {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: parseInt(text(), 10),\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n} / Null\r\n\r\nNull = \"null\" {\r\n  return {\r\n    nodeType: 'E',\r\n    type: 'EReturnValue',\r\n    evaluate,\r\n    props: {\r\n      value: null,\r\n    },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\n\r\nStatementExit = ExpressionStatement\r\n\r\nExpressionStatement = expressions:ExpressionList _ Terminator? {\r\n  return {\r\n    alias: 'ExpressionStatement',\r\n    nodeType: \"S\",\r\n    type: 'SExpressionStatement',\r\n    evaluate,\r\n    props: { expressions },\r\n    text: text(),\r\n    location: location()\r\n  };\r\n}\r\n\r\n_ = [\\t\\r\\n ]*\r\n__ = [\\t\\r\\n ]+"
-
-/***/ }),
-/* 32 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -965,7 +952,7 @@ module.exports = {
 }
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports) {
 
 module.exports = {
