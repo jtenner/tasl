@@ -168,8 +168,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var PEG = __webpack_require__(13);
@@ -239,8 +237,12 @@ module.exports = function () {
     }
   }, {
     key: 'evaluateAsync',
-    value: async function evaluateAsync(text, context) {
-      return this.evaluateStatementsAsync.apply(this, [this.parser.parse(text)].concat(_toConsumableArray(context)));
+    value: async function evaluateAsync(text) {
+      for (var _len3 = arguments.length, context = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+        context[_key3 - 1] = arguments[_key3];
+      }
+
+      return this.evaluateStatementsAsync.apply(this, [this.parser.parse(text)].concat(context));
     }
   }, {
     key: 'evaluateStatementsAsync',
@@ -248,8 +250,8 @@ module.exports = function () {
       var result = void 0,
           value = void 0;
 
-      for (var _len3 = arguments.length, context = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-        context[_key3 - 1] = arguments[_key3];
+      for (var _len4 = arguments.length, context = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+        context[_key4 - 1] = arguments[_key4];
       }
 
       var _iteratorNormalCompletion2 = true;
