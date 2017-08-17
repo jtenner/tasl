@@ -8,7 +8,8 @@ g.addExpression({
     ['operator', '+'],
     ['right', Rule('Member')]
   ],
-  Handler({ left, right }, context) {
+  Handler({ left, right }, context, system) {
+    console.log(system);
     return left.evaluate(context) + right.evaluate(context);
   }
 })
@@ -25,5 +26,5 @@ g.addExpression({
 
 const log = (x) => console.log(x);
 const tasl = g.generate();
-tasl.evaluateAsync('a + b', { a: 1, b: 2 }).then(log);
+tasl.evaluateAsync('a + b', { a: 1, b: 2 }, { test: 'test' }).then(log);
 
